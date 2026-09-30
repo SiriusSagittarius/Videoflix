@@ -75,6 +75,16 @@ The admin panel is available at <http://localhost:8000/admin/>. Log in with
 | `EMAIL_USE_TLS`, `EMAIL_USE_SSL` | Encryption of the SMTP connection, only one of them may be `True` |
 | `DEFAULT_FROM_EMAIL` | Sender address of the emails |
 
+## API endpoints
+
+All endpoints start with `/api/`. On invalid input the API answers with a
+general message on purpose, so it does not reveal whether an email address
+is already registered.
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/register/` | Create an inactive user from `email`, `password` and `confirmed_password` | – |
+
 ## Useful commands
 
 ```bash
@@ -105,7 +115,8 @@ After a change to `requirements.txt`, rebuild the image with
 ```
 core/                   Django settings and root URLs
 auth_app/               User accounts and JWT cookie authentication
-  api/                  Authentication class (reads the access_token cookie)
+  api/                  Serializers, views, URLs and the cookie authentication class
+  tokens.py             Token generator for the account activation link
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn
 docker-compose.yml      Services: web (Django), db (PostgreSQL), redis

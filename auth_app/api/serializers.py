@@ -1,0 +1,37 @@
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
+from rest_framework import serializers
+
+
+class RegistrationSerializer(serializers.Serializer):
+    """Validate the sign-up data and create an inactive user."""
+
+    email = serializers.EmailField(max_length=150)
+    password = serializers.CharField(write_only=True)
+    confirmed_password = serializers.CharField(write_only=True)
+
+    def validate_email(self, value):
+        """Reject email addresses that are already registered."""
+        email = value.lower()
+        email_taken = Q(email__iexact=email) | Q(username__iexact=email)
+        if User.objects.filter(email_taken).exists():
+            raise serializers.ValidationError("Email is already registered.")
+        return email
+
+    def validate(self, attrs):
+        """Check that both passwords match and are strong enough."""
+        if attrs["password"] != attrs["confirmed_password"]:
+            raise serializers.ValidationError("Passwords do not match.")
+        validate_password(attrs["password"])
+        return attrs
+
+    def create(self, validated_data):
+        """Create an inactive user with the email as username."""
+        email = validated_data["email"]
+        return User.objects.create_user(
+            username=email,
+            email=email,
+            password=validated_data["password"],
+            is_active=False,
+        )
