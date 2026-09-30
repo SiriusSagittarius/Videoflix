@@ -109,6 +109,13 @@ docker-compose.yml      Services: web (Django), db (PostgreSQL), redis
 requirements.txt        Python dependencies
 ```
 
-## Credits
+## Credits and license
 
-The Docker setup and the frontend are provided by the Developer Akademie.
+**Developed as part of the Developer Akademie GmbH advanced training program.**
+
+The Docker setup (`backend.Dockerfile`, `backend.entrypoint.sh`,
+`docker-compose.yml`, `.env.template`, `.dockerignore`) and the
+[frontend](https://github.com/SiriusSagittarius/Videoflix-Frontend) are
+provided by the Developer Akademie GmbH. The "Developer Akademie Learning
+License (Non-commercial)" in [LICENSE.md](LICENSE.md) applies to these
+provided components.
