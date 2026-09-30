@@ -29,7 +29,8 @@ class RegistrationSerializer(serializers.Serializer):
         """Check that both passwords match and are strong enough."""
         if attrs["password"] != attrs["confirmed_password"]:
             raise serializers.ValidationError("Passwords do not match.")
-        validate_password(attrs["password"])
+        new_user = User(username=attrs["email"], email=attrs["email"])
+        validate_password(attrs["password"], new_user)
         return attrs
 
     def create(self, validated_data):
@@ -51,9 +52,7 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """Attach the user if email and password belong to an active user."""
-        user = find_user_by_credentials(
-            attrs["email"].lower(), attrs["password"]
-        )
+        user = find_user_by_credentials(attrs["email"], attrs["password"])
         if user is None:
             raise serializers.ValidationError(INVALID_INPUT_MESSAGE)
         if not user.is_active:

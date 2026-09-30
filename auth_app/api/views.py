@@ -1,4 +1,3 @@
-import django_rq
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -21,6 +20,7 @@ from auth_app.utils import (
     get_active_user_by_email,
     get_login_error,
     get_user_from_link,
+    queue_email,
     send_activation_email,
     send_password_reset_email,
     set_access_cookie,
@@ -52,14 +52,14 @@ class RegistrationView(APIView):
         """Create the user and return its data and the activation token."""
         serializer = RegistrationSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(INVALID_INPUT, status=status.HTTP_400_BAD_REQUEST)
+            return Response(INVALID_INPUT, status.HTTP_400_BAD_REQUEST)
         user = serializer.save()
-        django_rq.enqueue(send_activation_email, user.pk)
+        queue_email(send_activation_email, user.pk)
         response_data = {
             "user": {"id": user.id, "email": user.email},
             "token": account_activation_token.make_token(user),
         }
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(response_data, status.HTTP_201_CREATED)
 
 
 class ActivationView(APIView):
@@ -72,9 +72,7 @@ class ActivationView(APIView):
         """Set the user active if the token is valid."""
         user = get_user_from_link(uidb64, token, account_activation_token)
         if user is None:
-            return Response(
-                ACTIVATION_FAILED, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response(ACTIVATION_FAILED, status.HTTP_400_BAD_REQUEST)
         user.is_active = True
         user.save(update_fields=["is_active"])
         return Response({"message": "Account successfully activated."})
@@ -91,7 +89,7 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
             error = {"detail": get_login_error(serializer.errors)}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(error, status.HTTP_400_BAD_REQUEST)
         user = serializer.validated_data["user"]
         response = Response({
             "detail": "Login successful",
@@ -157,7 +155,7 @@ class PasswordResetView(APIView):
         email = serializer.validated_data["email"]
         user = get_active_user_by_email(email)
         if user is not None:
-            django_rq.enqueue(send_password_reset_email, user.pk)
+            queue_email(send_password_reset_email, user.pk)
         return Response(PASSWORD_RESET_SENT)
 
 

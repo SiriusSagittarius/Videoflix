@@ -1,9 +1,13 @@
+from importlib import import_module
+
 from django.apps import AppConfig
 
 
 class VideoAppConfig(AppConfig):
+    """Videos, their processing with FFmpeg and the streaming endpoints."""
+
     name = 'video_app'
 
     def ready(self):
-        """Connect the signal handlers of this app."""
-        from video_app import signals  # noqa: F401
+        """Load the signal handlers, so Django connects them on startup."""
+        import_module("video_app.signals")

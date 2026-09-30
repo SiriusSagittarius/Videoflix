@@ -25,7 +25,7 @@ def enqueue_processing(video_id):
 def queue_video_processing(sender, instance, created, **kwargs):
     """Start the background processing once a new video is saved."""
     if created:
-        transaction.on_commit(lambda: enqueue_processing(instance.pk))
+        transaction.on_commit(partial(enqueue_processing, instance.pk))
 
 
 @receiver(post_delete, sender=Video)

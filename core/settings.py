@@ -36,7 +36,9 @@ CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="http://lo
 CORS_ALLOWED_ORIGINS = CSRF_TRUSTED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", default="http://127.0.0.1:5500").rstrip("/")
+FRONTEND_URL = os.environ.get(
+    "FRONTEND_URL", default="http://127.0.0.1:5500"
+).rstrip("/")
 
 
 # Application definition
@@ -143,16 +145,20 @@ SIMPLE_JWT = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'NumericPasswordValidator',
     },
 ]
 
@@ -182,6 +188,13 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Since Django 5.1 only STORAGES is read. It uses the storage from the
+# required STATICFILES_STORAGE line above, so WhiteNoise compresses the files.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": STATICFILES_STORAGE},
+}
+
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
@@ -194,10 +207,16 @@ MAILERS = {
             'port': int(os.environ.get("EMAIL_PORT", default=587)),
             'username': os.environ.get("EMAIL_HOST_USER", default=""),
             'password': os.environ.get("EMAIL_HOST_PASSWORD", default=""),
-            'use_tls': os.environ.get("EMAIL_USE_TLS", default="True").lower() == "true",
-            'use_ssl': os.environ.get("EMAIL_USE_SSL", default="False").lower() == "true",
+            'use_tls': os.environ.get(
+                "EMAIL_USE_TLS", default="True"
+            ).lower() == "true",
+            'use_ssl': os.environ.get(
+                "EMAIL_USE_SSL", default="False"
+            ).lower() == "true",
         },
     },
 }
 
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="noreply@videoflix.local")
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL", default="noreply@videoflix.local"
+)

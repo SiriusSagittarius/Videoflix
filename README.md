@@ -7,8 +7,19 @@ background with FFmpeg.
 
 The frontend is provided separately and communicates with this API via REST.
 
-> **Status:** work in progress. Features and API endpoints are added to this
-> README as soon as they are implemented.
+## Features
+
+- Registration with email and password, the account stays inactive until
+  the link in the activation email is opened
+- Login with JWT tokens in HttpOnly cookies, token refresh and logout with
+  a token blacklist
+- Password reset via email, the link is valid for 24 hours and works once
+- HTML emails in the Videoflix design, sent in the background
+- Video upload in the Django admin, the RQ worker creates a thumbnail and
+  converts the video with FFmpeg to HLS in 480p, 720p and 1080p
+- Video list for the dashboard, newest first and cached in Redis
+- HLS streaming of playlists and segments, only for logged in users
+- General error messages that do not reveal which emails are registered
 
 ## Tech stack
 
@@ -41,8 +52,10 @@ cp .env.template .env
 ```
 
 Open `.env` and replace the placeholder values, at least `SECRET_KEY`, the
-`DB_*` and the `EMAIL_*` values (see [Configuration](#configuration-env)). Then build and start
-the containers:
+`DB_*` and the `EMAIL_*` values (see [Configuration](#configuration-env)).
+For Gmail use `smtp.gmail.com`, port `587`, TLS and an
+[app password](https://myaccount.google.com/apppasswords). Then build and
+start the containers:
 
 ```bash
 docker compose up --build
@@ -68,8 +81,9 @@ run on the same host.
 ## Uploading videos
 
 Videos are uploaded in the admin panel: <http://localhost:8000/admin/> →
-**Videos** → **Add video**. After saving, the RQ worker creates a thumbnail
-and converts the video with FFmpeg to HLS in 480p, 720p and 1080p:
+**Videos** → **Add video**. Allowed formats are `mp4`, `mov`, `mkv`, `webm`,
+`avi` and `m4v`. After saving, the RQ worker creates a thumbnail and
+converts the video with FFmpeg to HLS in 480p, 720p and 1080p:
 
 ```
 media/hls/<video id>/<resolution>/index.m3u8   playlist
@@ -78,8 +92,9 @@ media/hls/<video id>/<resolution>/000.ts, ...   segments of 6 seconds
 
 The column **Is converted** in the admin shows when a video is ready.
 Depending on its length and the CPU, the conversion can take a few minutes.
-Deleting a video in the admin also deletes its original file, thumbnail and
-HLS files.
+The file of an existing video cannot be replaced, because it is only
+converted once. To use another file, add a new video. Deleting a video in
+the admin also deletes its original file, thumbnail and HLS files.
 
 ## Configuration (`.env`)
 
@@ -126,6 +141,7 @@ that is not activated yet gets a hint to activate it first.
 docker compose logs -f web                                # follow the backend logs
 docker compose exec web python manage.py makemigrations  # create migrations
 docker compose exec web python manage.py migrate         # apply migrations
+docker compose restart web                                # reload the RQ worker after code changes
 docker compose down                                       # stop the containers
 docker compose down -v                                    # stop and delete database, media and static volumes
 ```
@@ -140,9 +156,12 @@ After a change to `requirements.txt`, rebuild the image with
   `exec ./backend.entrypoint.sh: no such file or directory`.
   `.gitattributes` takes care of this on checkout, also on Windows.
 - **Background jobs:** emails are sent and new videos are processed by the
-  RQ worker, not by the request itself. Gunicorn reloads code changes automatically, the RQ worker does not.
-  After changing code that runs in a job, restart the container with
-  `docker compose restart web`.
+  RQ worker, not by the request itself. The container runs one worker, so
+  emails are put in front of waiting video jobs. Gunicorn reloads code
+  changes automatically, the RQ worker does not. After changing code that
+  runs in a job, restart the container with `docker compose restart web`.
+- **Cookies:** with `DEBUG=True` the JWT cookies also work without HTTPS.
+  With `DEBUG=False` they are marked `Secure` and need HTTPS.
 - **Cache:** the video list is cached in Redis for 15 minutes. Adding,
   changing or deleting a video empties the cache, so the list is always up
   to date.
@@ -162,7 +181,7 @@ auth_app/               User accounts and JWT cookie authentication
   templates/            HTML and plain text email templates
   static/               Logo embedded in the emails
   tokens.py             Token generator for the account activation link
-  utils.py              Email helpers (links, logo, sending)
+  utils.py              Helpers for login, cookies, links and emails
 video_app/              Video model and admin for uploading videos
   api/                  Serializer, views and URLs of the video endpoints
   signals.py            Processing of new videos, file cleanup, cache reset

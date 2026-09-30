@@ -1,6 +1,7 @@
 from email.message import MIMEPart
 from pathlib import Path
 
+import django_rq
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
@@ -35,7 +36,7 @@ def find_user_by_credentials(email, password):
     The password is hashed for unknown emails as well, so the response
     time does not reveal which email addresses are registered.
     """
-    user = User.objects.filter(username=email).first()
+    user = User.objects.filter(email__iexact=email).first()
     if user is None:
         User().set_password(password)
         return None
@@ -150,6 +151,15 @@ def send_html_email(subject, template_name, context, recipient):
     )
     message.attach(create_logo_part())
     message.send()
+
+
+def queue_email(send_function, user_id):
+    """Queue an email job in front of waiting video jobs.
+
+    The container runs a single RQ worker, so an email would otherwise
+    wait until all queued videos are converted.
+    """
+    django_rq.enqueue(send_function, user_id, at_front=True)
 
 
 def send_activation_email(user_id):

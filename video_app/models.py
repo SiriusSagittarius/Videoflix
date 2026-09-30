@@ -1,4 +1,7 @@
+from django.core.validators import FileExtensionValidator
 from django.db import models
+
+VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "webm", "avi", "m4v"]
 
 
 class Video(models.Model):
@@ -8,7 +11,10 @@ class Video(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     category = models.CharField(max_length=50)
-    video_file = models.FileField(upload_to="videos/")
+    video_file = models.FileField(
+        upload_to="videos/",
+        validators=[FileExtensionValidator(VIDEO_EXTENSIONS)],
+    )
     thumbnail = models.FileField(upload_to="thumbnails/", blank=True)
     is_converted = models.BooleanField(default=False)
 
