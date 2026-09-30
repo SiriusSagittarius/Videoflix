@@ -14,12 +14,36 @@ from auth_app.tokens import account_activation_token
 
 ACCESS_TOKEN_COOKIE = "access_token"
 REFRESH_TOKEN_COOKIE = "refresh_token"
+INVALID_INPUT_MESSAGE = "Please check your input and try again."
+ACCOUNT_NOT_ACTIVE_MESSAGE = (
+    "Please activate your account first. "
+    "Check your emails for the activation link."
+)
 EMAIL_TEMPLATE_DIR = "auth_app/emails"
 LOGO_CID = "videoflix_logo"
 LOGO_PATH = (
     Path(__file__).resolve().parent
     / "static" / "auth_app" / "images" / "videoflix_logo.png"
 )
+
+
+def find_user_by_credentials(email, password):
+    """Return the user with this email and password, active or not.
+
+    The password is hashed for unknown emails as well, so the response
+    time does not reveal which email addresses are registered.
+    """
+    user = User.objects.filter(username=email).first()
+    if user is None:
+        User().set_password(password)
+        return None
+    return user if user.check_password(password) else None
+
+
+def get_login_error(errors):
+    """Return the login error, general unless the account is inactive."""
+    messages = errors.get("non_field_errors", [INVALID_INPUT_MESSAGE])
+    return messages[0]
 
 
 def set_token_cookie(response, name, token, lifetime):
