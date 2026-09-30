@@ -46,6 +46,18 @@ def get_hls_dir(video_id, resolution):
     return Path(settings.MEDIA_ROOT) / HLS_DIR / str(video_id) / resolution
 
 
+def get_hls_file(video_id, resolution, file_name):
+    """Return the path of an existing HLS file or None.
+
+    Only known resolutions are allowed, so the URL cannot point to other
+    folders on the server.
+    """
+    if resolution not in HLS_RESOLUTIONS:
+        return None
+    path = get_hls_dir(video_id, resolution) / file_name
+    return path if path.is_file() else None
+
+
 def create_thumbnail(video):
     """Create the thumbnail of a video with ffmpeg and store its path."""
     relative_path = f"{THUMBNAIL_DIR}/{video.pk}.jpg"

@@ -115,6 +115,8 @@ that is not activated yet gets a hint to activate it first.
 | POST | `/api/password_reset/` | Send a password reset link (valid for 24 hours) to an active user, always answers with the same message | – |
 | POST | `/api/password_confirm/<uidb64>/<token>/` | Set `new_password` (repeated in `confirm_password`) with the data from the reset link, works only once | – |
 | GET | `/api/video/` | List all converted videos, newest first, with `thumbnail_url` and `category` | ✔ |
+| GET | `/api/video/<movie_id>/<resolution>/index.m3u8` | HLS playlist of a video, `resolution` is `480p`, `720p` or `1080p` | ✔ |
+| GET | `/api/video/<movie_id>/<resolution>/<segment>/` | One HLS segment, e.g. `000.ts` (works with and without the trailing slash) | ✔ |
 
 ## Useful commands
 
