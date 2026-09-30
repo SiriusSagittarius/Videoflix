@@ -84,7 +84,7 @@ is already registered.
 
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| POST | `/api/register/` | Create an inactive user from `email`, `password` and `confirmed_password` | – |
+| POST | `/api/register/` | Create an inactive user from `email`, `password` and `confirmed_password` and send the activation email | – |
 
 ## Useful commands
 
@@ -105,6 +105,10 @@ After a change to `requirements.txt`, rebuild the image with
   endings, otherwise the container stops with
   `exec ./backend.entrypoint.sh: no such file or directory`.
   `.gitattributes` takes care of this on checkout, also on Windows.
+- **Background jobs:** emails are sent by the RQ worker, not by the request
+  itself. Gunicorn reloads code changes automatically, the RQ worker does not.
+  After changing code that runs in a job, restart the container with
+  `docker compose restart web`.
 - **Media files** (uploaded videos, HLS files, thumbnails) are stored in the
   Docker volume `videoflix_media`, not in the project folder.
 - **Database password:** PostgreSQL stores the password when its volume is
