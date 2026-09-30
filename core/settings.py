@@ -36,6 +36,8 @@ CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="http://lo
 CORS_ALLOWED_ORIGINS = CSRF_TRUSTED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 
+FRONTEND_URL = os.environ.get("FRONTEND_URL", default="http://127.0.0.1:5500").rstrip("/")
+
 
 # Application definition
 

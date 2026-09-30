@@ -74,6 +74,7 @@ The admin panel is available at <http://localhost:8000/admin/>. Log in with
 | `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Login of the SMTP account |
 | `EMAIL_USE_TLS`, `EMAIL_USE_SSL` | Encryption of the SMTP connection, only one of them may be `True` |
 | `DEFAULT_FROM_EMAIL` | Sender address of the emails |
+| `FRONTEND_URL` | Address of the frontend, used for the links in the emails (default `http://127.0.0.1:5500`) |
 
 ## API endpoints
 
@@ -116,7 +117,10 @@ After a change to `requirements.txt`, rebuild the image with
 core/                   Django settings and root URLs
 auth_app/               User accounts and JWT cookie authentication
   api/                  Serializers, views, URLs and the cookie authentication class
+  templates/            HTML and plain text email templates
+  static/               Logo embedded in the emails
   tokens.py             Token generator for the account activation link
+  utils.py              Email helpers (links, logo, sending)
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn
 docker-compose.yml      Services: web (Django), db (PostgreSQL), redis
