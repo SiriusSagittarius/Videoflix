@@ -59,13 +59,18 @@ def set_token_cookie(response, name, token, lifetime):
     )
 
 
+def set_access_cookie(response, access_token):
+    """Store the access token in its HttpOnly cookie."""
+    set_token_cookie(
+        response, ACCESS_TOKEN_COOKIE, access_token,
+        api_settings.ACCESS_TOKEN_LIFETIME,
+    )
+
+
 def set_auth_cookies(response, user):
     """Create a token pair for the user and store both tokens as cookies."""
     refresh_token = RefreshToken.for_user(user)
-    set_token_cookie(
-        response, ACCESS_TOKEN_COOKIE, refresh_token.access_token,
-        api_settings.ACCESS_TOKEN_LIFETIME,
-    )
+    set_access_cookie(response, refresh_token.access_token)
     set_token_cookie(
         response, REFRESH_TOKEN_COOKIE, refresh_token,
         api_settings.REFRESH_TOKEN_LIFETIME,
@@ -76,6 +81,14 @@ def delete_auth_cookies(response):
     """Remove both JWT cookies from the browser."""
     for name in (ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE):
         response.delete_cookie(name, samesite="Lax")
+
+
+def create_access_token(raw_refresh_token):
+    """Return a new access token for a valid refresh token, else None."""
+    try:
+        return RefreshToken(raw_refresh_token).access_token
+    except TokenError:
+        return None
 
 
 def blacklist_refresh_token(raw_token):

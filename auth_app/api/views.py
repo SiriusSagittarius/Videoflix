@@ -10,16 +10,19 @@ from auth_app.utils import (
     INVALID_INPUT_MESSAGE,
     REFRESH_TOKEN_COOKIE,
     blacklist_refresh_token,
+    create_access_token,
     delete_auth_cookies,
     get_login_error,
     get_user_from_link,
     send_activation_email,
+    set_access_cookie,
     set_auth_cookies,
 )
 
 INVALID_INPUT = {"detail": INVALID_INPUT_MESSAGE}
 ACTIVATION_FAILED = {"message": "Activation failed."}
-REFRESH_TOKEN_MISSING = {"detail": "Refresh token is missing."}
+REFRESH_MISSING = {"detail": "Refresh token is missing."}
+REFRESH_INVALID = {"detail": "Refresh token is invalid."}
 LOGOUT_SUCCESS = {
     "detail": "Logout successful! All tokens will be deleted. "
               "Refresh token is now invalid."
@@ -99,11 +102,29 @@ class LogoutView(APIView):
         """Blacklist the refresh token and delete both JWT cookies."""
         refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE)
         if refresh_token is None:
-            response = Response(
-                REFRESH_TOKEN_MISSING, status=status.HTTP_400_BAD_REQUEST
-            )
+            response = Response(REFRESH_MISSING, status.HTTP_400_BAD_REQUEST)
         else:
             blacklist_refresh_token(refresh_token)
             response = Response(LOGOUT_SUCCESS)
         delete_auth_cookies(response)
+        return response
+
+
+class CookieTokenRefreshView(APIView):
+    """Issue a new access token based on the refresh token cookie."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """Set a new access token cookie if the refresh token is valid."""
+        refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE)
+        if refresh_token is None:
+            return Response(REFRESH_MISSING, status.HTTP_400_BAD_REQUEST)
+        access_token = create_access_token(refresh_token)
+        if access_token is None:
+            return Response(REFRESH_INVALID, status.HTTP_401_UNAUTHORIZED)
+        data = {"detail": "Token refreshed", "access": str(access_token)}
+        response = Response(data)
+        set_access_cookie(response, access_token)
         return response
