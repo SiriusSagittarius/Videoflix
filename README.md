@@ -88,7 +88,8 @@ run on the same host.
 
 All endpoints start with `/api/`. On invalid input the API answers with a
 general message on purpose, so it does not reveal whether an email address
-is already registered.
+is already registered. Only a login with the correct password of an account
+that is not activated yet gets a hint to activate it first.
 
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
