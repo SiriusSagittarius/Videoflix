@@ -6,9 +6,10 @@ from rest_framework.views import APIView
 
 from auth_app.api.serializers import RegistrationSerializer
 from auth_app.tokens import account_activation_token
-from auth_app.utils import send_activation_email
+from auth_app.utils import get_user_from_link, send_activation_email
 
 INVALID_INPUT = {"detail": "Please check your input and try again."}
+ACTIVATION_FAILED = {"message": "Activation failed."}
 
 
 class RegistrationView(APIView):
@@ -29,3 +30,21 @@ class RegistrationView(APIView):
             "token": account_activation_token.make_token(user),
         }
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class ActivationView(APIView):
+    """Activate an account with the uid and token from the activation link."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request, uidb64, token):
+        """Set the user active if the token is valid."""
+        user = get_user_from_link(uidb64, token, account_activation_token)
+        if user is None:
+            return Response(
+                ACTIVATION_FAILED, status=status.HTTP_400_BAD_REQUEST
+            )
+        user.is_active = True
+        user.save(update_fields=["is_active"])
+        return Response({"message": "Account successfully activated."})

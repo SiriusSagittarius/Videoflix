@@ -5,8 +5,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from auth_app.tokens import account_activation_token
 
@@ -17,6 +17,23 @@ LOGO_PATH = (
     Path(__file__).resolve().parent
     / "static" / "auth_app" / "images" / "videoflix_logo.png"
 )
+
+
+def get_user_by_uid(uidb64):
+    """Return the user for a base64 encoded id or None if it is invalid."""
+    try:
+        user_id = force_str(urlsafe_base64_decode(uidb64))
+        return User.objects.get(pk=user_id)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return None
+
+
+def get_user_from_link(uidb64, token, token_generator):
+    """Return the user of an email link if uid and token are valid."""
+    user = get_user_by_uid(uidb64)
+    if user is not None and token_generator.check_token(user, token):
+        return user
+    return None
 
 
 def build_frontend_link(page, user, token):

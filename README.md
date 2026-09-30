@@ -85,6 +85,7 @@ is already registered.
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
 | POST | `/api/register/` | Create an inactive user from `email`, `password` and `confirmed_password` and send the activation email | – |
+| GET | `/api/activate/<uidb64>/<token>/` | Activate the account with the data from the activation link, works only once | – |
 
 ## Useful commands
 
