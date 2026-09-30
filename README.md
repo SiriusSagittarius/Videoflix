@@ -65,6 +65,20 @@ separate project. Open it with the VS Code extension Live Server at
 at `127.0.0.1:8000`, and the browser only sends the login cookies when both
 run on the same host.
 
+## Uploading videos
+
+Videos are uploaded in the admin panel: <http://localhost:8000/admin/> →
+**Videos** → **Add video**. After saving, the RQ worker creates a thumbnail
+and converts the video with FFmpeg to HLS in 480p, 720p and 1080p:
+
+```
+media/hls/<video id>/<resolution>/index.m3u8   playlist
+media/hls/<video id>/<resolution>/000.ts, ...   segments of 6 seconds
+```
+
+The column **Is converted** in the admin shows when a video is ready.
+Depending on its length and the CPU, the conversion can take a few minutes.
+
 ## Configuration (`.env`)
 
 | Variable | Meaning |
@@ -143,7 +157,7 @@ auth_app/               User accounts and JWT cookie authentication
   utils.py              Email helpers (links, logo, sending)
 video_app/              Video model and admin for uploading videos
   signals.py            Starts the background processing of new videos
-  utils.py              Background job with FFmpeg (thumbnail)
+  utils.py              Background job with FFmpeg (thumbnail, HLS conversion)
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn
 docker-compose.yml      Services: web (Django), db (PostgreSQL), redis

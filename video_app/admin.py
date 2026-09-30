@@ -7,7 +7,7 @@ from video_app.models import Video
 class VideoAdmin(admin.ModelAdmin):
     """Upload and manage videos in the Django admin."""
 
-    list_display = ("title", "category", "created_at")
-    list_filter = ("category",)
+    list_display = ("title", "category", "created_at", "is_converted")
+    list_filter = ("category", "is_converted")
     search_fields = ("title", "description")
-    readonly_fields = ("created_at", "thumbnail")
+    readonly_fields = ("created_at", "thumbnail", "is_converted")

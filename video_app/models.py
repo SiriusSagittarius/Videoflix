@@ -10,6 +10,7 @@ class Video(models.Model):
     category = models.CharField(max_length=50)
     video_file = models.FileField(upload_to="videos/")
     thumbnail = models.FileField(upload_to="thumbnails/", blank=True)
+    is_converted = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]
