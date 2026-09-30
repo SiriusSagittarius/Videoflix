@@ -120,8 +120,8 @@ After a change to `requirements.txt`, rebuild the image with
   endings, otherwise the container stops with
   `exec ./backend.entrypoint.sh: no such file or directory`.
   `.gitattributes` takes care of this on checkout, also on Windows.
-- **Background jobs:** emails are sent by the RQ worker, not by the request
-  itself. Gunicorn reloads code changes automatically, the RQ worker does not.
+- **Background jobs:** emails are sent and new videos are processed by the
+  RQ worker, not by the request itself. Gunicorn reloads code changes automatically, the RQ worker does not.
   After changing code that runs in a job, restart the container with
   `docker compose restart web`.
 - **Media files** (uploaded videos, HLS files, thumbnails) are stored in the
@@ -142,6 +142,8 @@ auth_app/               User accounts and JWT cookie authentication
   tokens.py             Token generator for the account activation link
   utils.py              Email helpers (links, logo, sending)
 video_app/              Video model and admin for uploading videos
+  signals.py            Starts the background processing of new videos
+  utils.py              Background job with FFmpeg (thumbnail)
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn
 docker-compose.yml      Services: web (Django), db (PostgreSQL), redis
