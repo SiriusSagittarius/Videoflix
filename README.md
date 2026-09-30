@@ -114,6 +114,7 @@ that is not activated yet gets a hint to activate it first.
 | POST | `/api/token/refresh/` | Set a new `access_token` cookie | refresh cookie |
 | POST | `/api/password_reset/` | Send a password reset link (valid for 24 hours) to an active user, always answers with the same message | – |
 | POST | `/api/password_confirm/<uidb64>/<token>/` | Set `new_password` (repeated in `confirm_password`) with the data from the reset link, works only once | – |
+| GET | `/api/video/` | List all converted videos, newest first, with `thumbnail_url` and `category` | ✔ |
 
 ## Useful commands
 
@@ -138,6 +139,9 @@ After a change to `requirements.txt`, rebuild the image with
   RQ worker, not by the request itself. Gunicorn reloads code changes automatically, the RQ worker does not.
   After changing code that runs in a job, restart the container with
   `docker compose restart web`.
+- **Cache:** the video list is cached in Redis for 15 minutes. Adding,
+  changing or deleting a video empties the cache, so the list is always up
+  to date.
 - **Media files** (uploaded videos, HLS files, thumbnails) are stored in the
   Docker volume `videoflix_media`, not in the project folder. Django serves
   them under `/media/` as long as `DEBUG=True`.
@@ -156,7 +160,8 @@ auth_app/               User accounts and JWT cookie authentication
   tokens.py             Token generator for the account activation link
   utils.py              Email helpers (links, logo, sending)
 video_app/              Video model and admin for uploading videos
-  signals.py            Starts the background processing of new videos
+  api/                  Serializer, views and URLs of the video endpoints
+  signals.py            Starts the processing of new videos, empties the cache
   utils.py              Background job with FFmpeg (thumbnail, HLS conversion)
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn
