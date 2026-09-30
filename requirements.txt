@@ -1,0 +1,17 @@
+asgiref==3.12.1
+click==8.5.0
+croniter==6.2.4
+Django==6.1.1
+django-redis==7.0.0
+django-rq==4.2.0
+djangorestframework==3.18.1
+gunicorn==26.2.0
+psycopg2-binary==2.9.13
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.3
+redis==8.1.0
+rq==2.12.0
+six==1.17.0
+sqlparse==0.6.0
+tzdata==2026.4
+whitenoise==6.12.0

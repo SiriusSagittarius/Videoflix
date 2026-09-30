@@ -1,0 +1,22 @@
+# Virtual environment
+env/
+venv/
+.venv/
+
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Django
+db.sqlite3
+static/
+media/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
