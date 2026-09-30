@@ -1,4 +1,5 @@
 import django_rq
+from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -6,6 +7,7 @@ from rest_framework.views import APIView
 
 from auth_app.api.serializers import (
     LoginSerializer,
+    PasswordConfirmSerializer,
     PasswordResetSerializer,
     RegistrationSerializer,
 )
@@ -36,6 +38,8 @@ LOGOUT_SUCCESS = {
 PASSWORD_RESET_SENT = {
     "detail": "An email has been sent to reset your password."
 }
+RESET_LINK_INVALID = {"detail": "The reset link is invalid or has expired."}
+PASSWORD_RESET_DONE = {"detail": "Your Password has been successfully reset."}
 
 
 class RegistrationView(APIView):
@@ -155,3 +159,24 @@ class PasswordResetView(APIView):
         if user is not None:
             django_rq.enqueue(send_password_reset_email, user.pk)
         return Response(PASSWORD_RESET_SENT)
+
+
+class PasswordConfirmView(APIView):
+    """Set a new password with the uid and token from the reset link."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request, uidb64, token):
+        """Save the new password if link and input are valid."""
+        user = get_user_from_link(uidb64, token, default_token_generator)
+        if user is None:
+            return Response(RESET_LINK_INVALID, status.HTTP_400_BAD_REQUEST)
+        serializer = PasswordConfirmSerializer(
+            data=request.data, context={"user": user}
+        )
+        if not serializer.is_valid():
+            return Response(INVALID_INPUT, status.HTTP_400_BAD_REQUEST)
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return Response(PASSWORD_RESET_DONE)

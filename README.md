@@ -99,6 +99,7 @@ that is not activated yet gets a hint to activate it first.
 | POST | `/api/logout/` | Put the refresh token on the blacklist and delete both cookies | refresh cookie |
 | POST | `/api/token/refresh/` | Set a new `access_token` cookie | refresh cookie |
 | POST | `/api/password_reset/` | Send a password reset link (valid for 24 hours) to an active user, always answers with the same message | – |
+| POST | `/api/password_confirm/<uidb64>/<token>/` | Set `new_password` (repeated in `confirm_password`) with the data from the reset link, works only once | – |
 
 ## Useful commands
 
