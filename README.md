@@ -57,6 +57,14 @@ starts an RQ worker and finally Gunicorn.
 The admin panel is available at <http://localhost:8000/admin/>. Log in with
 `DJANGO_SUPERUSER_USERNAME` and `DJANGO_SUPERUSER_PASSWORD`.
 
+## Using the frontend
+
+The [frontend](https://github.com/SiriusSagittarius/Videoflix-Frontend) is a
+separate project. Open it with the VS Code extension Live Server at
+**<http://127.0.0.1:5500>**, not `localhost:5500`. The frontend calls the API
+at `127.0.0.1:8000`, and the browser only sends the login cookies when both
+run on the same host.
+
 ## Configuration (`.env`)
 
 | Variable | Meaning |
@@ -86,6 +94,7 @@ is already registered.
 |---|---|---|---|
 | POST | `/api/register/` | Create an inactive user from `email`, `password` and `confirmed_password` and send the activation email | – |
 | GET | `/api/activate/<uidb64>/<token>/` | Activate the account with the data from the activation link, works only once | – |
+| POST | `/api/login/` | Log in with `email` and `password`, sets the `access_token` and `refresh_token` cookies | – |
 
 ## Useful commands
 

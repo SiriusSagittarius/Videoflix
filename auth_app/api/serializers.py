@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.db.models import Q
@@ -35,3 +36,20 @@ class RegistrationSerializer(serializers.Serializer):
             password=validated_data["password"],
             is_active=False,
         )
+
+
+class LoginSerializer(serializers.Serializer):
+    """Check the login data of an active user."""
+
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        """Attach the user if email and password belong to an active user."""
+        user = authenticate(
+            username=attrs["email"].lower(), password=attrs["password"]
+        )
+        if user is None:
+            raise serializers.ValidationError("Invalid login data.")
+        attrs["user"] = user
+        return attrs

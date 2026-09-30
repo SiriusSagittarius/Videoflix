@@ -7,16 +7,44 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from auth_app.tokens import account_activation_token
 
 ACCESS_TOKEN_COOKIE = "access_token"
+REFRESH_TOKEN_COOKIE = "refresh_token"
 EMAIL_TEMPLATE_DIR = "auth_app/emails"
 LOGO_CID = "videoflix_logo"
 LOGO_PATH = (
     Path(__file__).resolve().parent
     / "static" / "auth_app" / "images" / "videoflix_logo.png"
 )
+
+
+def set_token_cookie(response, name, token, lifetime):
+    """Store a token in an HttpOnly cookie that expires with the token."""
+    response.set_cookie(
+        name,
+        str(token),
+        max_age=int(lifetime.total_seconds()),
+        httponly=True,
+        secure=not settings.DEBUG,
+        samesite="Lax",
+    )
+
+
+def set_auth_cookies(response, user):
+    """Create a token pair for the user and store both tokens as cookies."""
+    refresh_token = RefreshToken.for_user(user)
+    set_token_cookie(
+        response, ACCESS_TOKEN_COOKIE, refresh_token.access_token,
+        api_settings.ACCESS_TOKEN_LIFETIME,
+    )
+    set_token_cookie(
+        response, REFRESH_TOKEN_COOKIE, refresh_token,
+        api_settings.REFRESH_TOKEN_LIFETIME,
+    )
 
 
 def get_user_by_uid(uidb64):

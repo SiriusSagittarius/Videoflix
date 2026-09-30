@@ -4,9 +4,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from auth_app.api.serializers import RegistrationSerializer
+from auth_app.api.serializers import LoginSerializer, RegistrationSerializer
 from auth_app.tokens import account_activation_token
-from auth_app.utils import get_user_from_link, send_activation_email
+from auth_app.utils import (
+    get_user_from_link,
+    send_activation_email,
+    set_auth_cookies,
+)
 
 INVALID_INPUT = {"detail": "Please check your input and try again."}
 ACTIVATION_FAILED = {"message": "Activation failed."}
@@ -48,3 +52,23 @@ class ActivationView(APIView):
         user.is_active = True
         user.save(update_fields=["is_active"])
         return Response({"message": "Account successfully activated."})
+
+
+class LoginView(APIView):
+    """Log a user in and set the JWT cookies."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """Check the login data and answer with user data and cookies."""
+        serializer = LoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(INVALID_INPUT, status=status.HTTP_400_BAD_REQUEST)
+        user = serializer.validated_data["user"]
+        response = Response({
+            "detail": "Login successful",
+            "user": {"id": user.id, "username": user.username},
+        })
+        set_auth_cookies(response, user)
+        return response
