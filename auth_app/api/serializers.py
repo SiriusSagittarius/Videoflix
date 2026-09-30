@@ -60,3 +60,9 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(ACCOUNT_NOT_ACTIVE_MESSAGE)
         attrs["user"] = user
         return attrs
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    """Validate the email address for a password reset request."""
+
+    email = serializers.EmailField()

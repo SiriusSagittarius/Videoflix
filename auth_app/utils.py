@@ -3,6 +3,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
@@ -161,4 +162,20 @@ def send_activation_email(user_id):
     }
     send_html_email(
         "Confirm your email", "activation_email", context, user.email
+    )
+
+
+def get_active_user_by_email(email):
+    """Return the active user with this email address or None."""
+    return User.objects.filter(email__iexact=email, is_active=True).first()
+
+
+def send_password_reset_email(user_id):
+    """Send the password reset email to the user with this id."""
+    user = User.objects.get(pk=user_id)
+    token = default_token_generator.make_token(user)
+    link = build_frontend_link("confirm_password.html", user, token)
+    context = {"reset_link": link}
+    send_html_email(
+        "Reset your Password", "password_reset_email", context, user.email
     )

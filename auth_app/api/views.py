@@ -4,7 +4,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from auth_app.api.serializers import LoginSerializer, RegistrationSerializer
+from auth_app.api.serializers import (
+    LoginSerializer,
+    PasswordResetSerializer,
+    RegistrationSerializer,
+)
 from auth_app.tokens import account_activation_token
 from auth_app.utils import (
     INVALID_INPUT_MESSAGE,
@@ -12,9 +16,11 @@ from auth_app.utils import (
     blacklist_refresh_token,
     create_access_token,
     delete_auth_cookies,
+    get_active_user_by_email,
     get_login_error,
     get_user_from_link,
     send_activation_email,
+    send_password_reset_email,
     set_access_cookie,
     set_auth_cookies,
 )
@@ -26,6 +32,9 @@ REFRESH_INVALID = {"detail": "Refresh token is invalid."}
 LOGOUT_SUCCESS = {
     "detail": "Logout successful! All tokens will be deleted. "
               "Refresh token is now invalid."
+}
+PASSWORD_RESET_SENT = {
+    "detail": "An email has been sent to reset your password."
 }
 
 
@@ -128,3 +137,21 @@ class CookieTokenRefreshView(APIView):
         response = Response(data)
         set_access_cookie(response, access_token)
         return response
+
+
+class PasswordResetView(APIView):
+    """Send a password reset link without revealing if the email exists."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """Queue the reset email for an active user and always confirm."""
+        serializer = PasswordResetSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(INVALID_INPUT, status.HTTP_400_BAD_REQUEST)
+        email = serializer.validated_data["email"]
+        user = get_active_user_by_email(email)
+        if user is not None:
+            django_rq.enqueue(send_password_reset_email, user.pk)
+        return Response(PASSWORD_RESET_SENT)
