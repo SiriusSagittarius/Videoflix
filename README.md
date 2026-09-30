@@ -15,6 +15,7 @@ The frontend is provided separately and communicates with this API via REST.
 | Purpose | Tool |
 |---|---|
 | Web framework / API | Django, Django REST Framework |
+| CORS | django-cors-headers |
 | Database | PostgreSQL |
 | Cache and job queue | Redis, django-redis, Django RQ |
 | Video conversion | FFmpeg |
@@ -63,7 +64,7 @@ The admin panel is available at <http://localhost:8000/admin/>. Log in with
 | `SECRET_KEY` | Secret key of the Django project, a long random string |
 | `DEBUG` | `True` for development, `False` in production |
 | `ALLOWED_HOSTS` | Comma separated host names the backend answers to |
-| `CSRF_TRUSTED_ORIGINS` | Comma separated origins trusted for CSRF |
+| `CSRF_TRUSTED_ORIGINS` | Comma separated frontend origins, trusted for CSRF and allowed for CORS (e.g. `http://127.0.0.1:5500`) |
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD` | PostgreSQL database, user and password |
 | `DB_HOST`, `DB_PORT` | PostgreSQL host and port (`db`, `5432` in Docker) |
 | `REDIS_LOCATION` | Redis URL for the cache |
