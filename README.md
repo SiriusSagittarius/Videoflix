@@ -125,7 +125,8 @@ After a change to `requirements.txt`, rebuild the image with
   After changing code that runs in a job, restart the container with
   `docker compose restart web`.
 - **Media files** (uploaded videos, HLS files, thumbnails) are stored in the
-  Docker volume `videoflix_media`, not in the project folder.
+  Docker volume `videoflix_media`, not in the project folder. Django serves
+  them under `/media/` as long as `DEBUG=True`.
 - **Database password:** PostgreSQL stores the password when its volume is
   created. To change `DB_PASSWORD` later, remove the volumes first with
   `docker compose down -v`. This deletes all data.
@@ -140,6 +141,7 @@ auth_app/               User accounts and JWT cookie authentication
   static/               Logo embedded in the emails
   tokens.py             Token generator for the account activation link
   utils.py              Email helpers (links, logo, sending)
+video_app/              Video model and admin for uploading videos
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn
 docker-compose.yml      Services: web (Django), db (PostgreSQL), redis
