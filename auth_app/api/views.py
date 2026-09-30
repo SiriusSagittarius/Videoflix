@@ -8,6 +8,9 @@ from auth_app.api.serializers import LoginSerializer, RegistrationSerializer
 from auth_app.tokens import account_activation_token
 from auth_app.utils import (
     INVALID_INPUT_MESSAGE,
+    REFRESH_TOKEN_COOKIE,
+    blacklist_refresh_token,
+    delete_auth_cookies,
     get_login_error,
     get_user_from_link,
     send_activation_email,
@@ -16,6 +19,11 @@ from auth_app.utils import (
 
 INVALID_INPUT = {"detail": INVALID_INPUT_MESSAGE}
 ACTIVATION_FAILED = {"message": "Activation failed."}
+REFRESH_TOKEN_MISSING = {"detail": "Refresh token is missing."}
+LOGOUT_SUCCESS = {
+    "detail": "Logout successful! All tokens will be deleted. "
+              "Refresh token is now invalid."
+}
 
 
 class RegistrationView(APIView):
@@ -74,4 +82,28 @@ class LoginView(APIView):
             "user": {"id": user.id, "username": user.username},
         })
         set_auth_cookies(response, user)
+        return response
+
+
+class LogoutView(APIView):
+    """Log a user out by invalidating the refresh token.
+
+    Works without a valid access token, so an expired login can still
+    be ended cleanly.
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """Blacklist the refresh token and delete both JWT cookies."""
+        refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE)
+        if refresh_token is None:
+            response = Response(
+                REFRESH_TOKEN_MISSING, status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            blacklist_refresh_token(refresh_token)
+            response = Response(LOGOUT_SUCCESS)
+        delete_auth_cookies(response)
         return response

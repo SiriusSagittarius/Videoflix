@@ -96,6 +96,7 @@ that is not activated yet gets a hint to activate it first.
 | POST | `/api/register/` | Create an inactive user from `email`, `password` and `confirmed_password` and send the activation email | – |
 | GET | `/api/activate/<uidb64>/<token>/` | Activate the account with the data from the activation link, works only once | – |
 | POST | `/api/login/` | Log in with `email` and `password`, sets the `access_token` and `refresh_token` cookies | – |
+| POST | `/api/logout/` | Put the refresh token on the blacklist and delete both cookies | refresh cookie |
 
 ## Useful commands
 

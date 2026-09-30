@@ -7,6 +7,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -69,6 +70,20 @@ def set_auth_cookies(response, user):
         response, REFRESH_TOKEN_COOKIE, refresh_token,
         api_settings.REFRESH_TOKEN_LIFETIME,
     )
+
+
+def delete_auth_cookies(response):
+    """Remove both JWT cookies from the browser."""
+    for name in (ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE):
+        response.delete_cookie(name, samesite="Lax")
+
+
+def blacklist_refresh_token(raw_token):
+    """Put a refresh token on the blacklist, invalid tokens are skipped."""
+    try:
+        RefreshToken(raw_token).blacklist()
+    except TokenError:
+        return
 
 
 def get_user_by_uid(uidb64):

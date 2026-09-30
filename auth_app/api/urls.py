@@ -1,6 +1,11 @@
 from django.urls import path
 
-from auth_app.api.views import ActivationView, LoginView, RegistrationView
+from auth_app.api.views import (
+    ActivationView,
+    LoginView,
+    LogoutView,
+    RegistrationView,
+)
 
 urlpatterns = [
     path('register/', RegistrationView.as_view(), name='register'),
@@ -10,4 +15,5 @@ urlpatterns = [
         name='activate',
     ),
     path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 ]
