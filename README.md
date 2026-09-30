@@ -38,8 +38,8 @@ cd Videoflix
 cp .env.template .env
 ```
 
-Open `.env` and replace the placeholder values, at least `SECRET_KEY` and the
-`DB_*` values (see [Configuration](#configuration-env)). Then build and start
+Open `.env` and replace the placeholder values, at least `SECRET_KEY`, the
+`DB_*` and the `EMAIL_*` values (see [Configuration](#configuration-env)). Then build and start
 the containers:
 
 ```bash
@@ -61,12 +61,17 @@ The admin panel is available at <http://localhost:8000/admin/>. Log in with
 |---|---|
 | `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_PASSWORD`, `DJANGO_SUPERUSER_EMAIL` | Admin account, created on the first start |
 | `SECRET_KEY` | Secret key of the Django project, a long random string |
+| `DEBUG` | `True` for development, `False` in production |
 | `ALLOWED_HOSTS` | Comma separated host names the backend answers to |
 | `CSRF_TRUSTED_ORIGINS` | Comma separated origins trusted for CSRF |
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD` | PostgreSQL database, user and password |
 | `DB_HOST`, `DB_PORT` | PostgreSQL host and port (`db`, `5432` in Docker) |
 | `REDIS_LOCATION` | Redis URL for the cache |
 | `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB` | Redis connection for the RQ job queue |
+| `EMAIL_HOST`, `EMAIL_PORT` | SMTP server that sends the account emails |
+| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Login of the SMTP account |
+| `EMAIL_USE_TLS`, `EMAIL_USE_SSL` | Encryption of the SMTP connection, only one of them may be `True` |
+| `DEFAULT_FROM_EMAIL` | Sender address of the emails |
 
 ## Useful commands
 
