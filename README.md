@@ -15,6 +15,7 @@ The frontend is provided separately and communicates with this API via REST.
 | Purpose | Tool |
 |---|---|
 | Web framework / API | Django, Django REST Framework |
+| Authentication | djangorestframework-simplejwt (JWT in HttpOnly cookies, token blacklist) |
 | CORS | django-cors-headers |
 | Database | PostgreSQL |
 | Cache and job queue | Redis, django-redis, Django RQ |
@@ -103,6 +104,8 @@ After a change to `requirements.txt`, rebuild the image with
 
 ```
 core/                   Django settings and root URLs
+auth_app/               User accounts and JWT cookie authentication
+  api/                  Authentication class (reads the access_token cookie)
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn
 docker-compose.yml      Services: web (Django), db (PostgreSQL), redis
