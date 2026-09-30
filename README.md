@@ -78,6 +78,8 @@ media/hls/<video id>/<resolution>/000.ts, ...   segments of 6 seconds
 
 The column **Is converted** in the admin shows when a video is ready.
 Depending on its length and the CPU, the conversion can take a few minutes.
+Deleting a video in the admin also deletes its original file, thumbnail and
+HLS files.
 
 ## Configuration (`.env`)
 
@@ -163,7 +165,7 @@ auth_app/               User accounts and JWT cookie authentication
   utils.py              Email helpers (links, logo, sending)
 video_app/              Video model and admin for uploading videos
   api/                  Serializer, views and URLs of the video endpoints
-  signals.py            Starts the processing of new videos, empties the cache
+  signals.py            Processing of new videos, file cleanup, cache reset
   utils.py              Background job with FFmpeg (thumbnail, HLS conversion)
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn

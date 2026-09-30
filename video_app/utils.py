@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -41,9 +42,14 @@ def build_hls_command(source, target_dir, height, max_bitrate):
     ]
 
 
+def get_hls_root(video_id):
+    """Return the folder with all HLS files of a video."""
+    return Path(settings.MEDIA_ROOT) / HLS_DIR / str(video_id)
+
+
 def get_hls_dir(video_id, resolution):
     """Return the folder with the HLS files of a video in one resolution."""
-    return Path(settings.MEDIA_ROOT) / HLS_DIR / str(video_id) / resolution
+    return get_hls_root(video_id) / resolution
 
 
 def get_hls_file(video_id, resolution, file_name):
@@ -87,3 +93,10 @@ def process_video(video_id):
         convert_to_hls(video, resolution)
     video.is_converted = True
     video.save(update_fields=["is_converted"])
+
+
+def delete_video_files(video_file, thumbnail, video_id):
+    """Remove the original file, the thumbnail and all HLS files."""
+    video_file.delete(save=False)
+    thumbnail.delete(save=False)
+    shutil.rmtree(get_hls_root(video_id), ignore_errors=True)
