@@ -15,8 +15,9 @@ The frontend is provided separately and communicates with this API via REST.
   a token blacklist
 - Password reset via email, the link is valid for 24 hours and works once
 - HTML emails in the Videoflix design, sent in the background
-- Video upload in the Django admin, the RQ worker creates a thumbnail and
-  converts the video with FFmpeg to HLS in 480p, 720p and 1080p
+- Video upload in the Django admin with fixed categories, the RQ worker
+  creates a thumbnail and converts the video with FFmpeg to HLS in 480p,
+  720p and 1080p
 - Video list for the dashboard, newest first and cached in Redis
 - HLS streaming of playlists and segments, only for logged in users
 - General error messages that do not reveal which emails are registered
@@ -83,8 +84,10 @@ run on the same host.
 
 Videos are uploaded in the admin panel: <http://localhost:8000/admin/> →
 **Videos** → **Add video**. Allowed formats are `mp4`, `mov`, `mkv`, `webm`,
-`avi` and `m4v`. After saving, the RQ worker creates a thumbnail and
-converts the video with FFmpeg to HLS in 480p, 720p and 1080p:
+`avi` and `m4v`. The category is chosen from a fixed list (Action, Comedy,
+Documentary, Drama, Nature, Romance, Other), so the dashboard never gets
+several spellings of the same genre. After saving, the RQ worker creates a
+thumbnail and converts the video with FFmpeg to HLS in 480p, 720p and 1080p:
 
 ```
 media/hls/<video id>/<resolution>/index.m3u8   playlist
@@ -147,7 +150,7 @@ docker compose exec web coverage run manage.py test
 docker compose exec web coverage report
 ```
 
-The suite has 53 tests and covers 100 % of the code, lines and branches.
+The tests cover 100 % of the code, lines and branches.
 One test converts a short video with the real FFmpeg and checks the height
 of every HLS resolution.
 

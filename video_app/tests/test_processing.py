@@ -30,7 +30,7 @@ def create_real_video():
     ]
     subprocess.run(command, check=True, capture_output=True)
     return Video.objects.create(
-        title="Echtes Video", description="FFmpeg", category="Test",
+        title="Echtes Video", description="FFmpeg", category="Other",
         video_file=TEST_VIDEO,
     )
 

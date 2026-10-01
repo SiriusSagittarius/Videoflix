@@ -4,13 +4,25 @@ from django.db import models
 VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "webm", "avi", "m4v"]
 
 
+class Category(models.TextChoices):
+    """Fixed categories, so uploads cannot create new spellings."""
+
+    ACTION = "Action"
+    COMEDY = "Comedy"
+    DOCUMENTARY = "Documentary"
+    DRAMA = "Drama"
+    NATURE = "Nature"
+    ROMANCE = "Romance"
+    OTHER = "Other"
+
+
 class Video(models.Model):
     """A video with its metadata, the uploaded file and a thumbnail."""
 
     created_at = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
-    category = models.CharField(max_length=50)
+    category = models.CharField(max_length=50, choices=Category.choices)
     video_file = models.FileField(
         upload_to="videos/",
         validators=[FileExtensionValidator(VIDEO_EXTENSIONS)],
