@@ -33,6 +33,7 @@ The frontend is provided separately and communicates with this API via REST.
 | Video conversion | FFmpeg |
 | Web server | Gunicorn, WhiteNoise for static files |
 | Container | Docker, Docker Compose |
+| Tests | Django test runner, coverage |
 
 ## Requirements
 
@@ -135,6 +136,21 @@ that is not activated yet gets a hint to activate it first.
 | GET | `/api/video/<movie_id>/<resolution>/index.m3u8` | HLS playlist of a video, `resolution` is `480p`, `720p` or `1080p` | ✔ |
 | GET | `/api/video/<movie_id>/<resolution>/<segment>/` | One HLS segment, e.g. `000.ts` (works with and without the trailing slash) | ✔ |
 
+## Running the tests
+
+The tests run inside the backend container against PostgreSQL. They send no
+real emails and do not touch uploaded videos, because they use a temporary
+media folder and an in-memory cache.
+
+```bash
+docker compose exec web coverage run manage.py test
+docker compose exec web coverage report
+```
+
+The suite has 53 tests and covers 100 % of the code, lines and branches.
+One test converts a short video with the real FFmpeg and checks the height
+of every HLS resolution.
+
 ## Useful commands
 
 ```bash
@@ -180,17 +196,20 @@ auth_app/               User accounts and JWT cookie authentication
   api/                  Serializers, views, URLs and the cookie authentication class
   templates/            HTML and plain text email templates
   static/               Logo embedded in the emails
+  tests/                Tests of all auth endpoints, emails and cookies
   tokens.py             Token generator for the account activation link
   utils.py              Helpers for login, cookies, links and emails
 video_app/              Video model and admin for uploading videos
   api/                  Serializer, views and URLs of the video endpoints
   signals.py            Processing of new videos, file cleanup, cache reset
+  tests/                Tests of the video endpoints, processing and admin
   utils.py              Background job with FFmpeg (thumbnail, HLS conversion)
 backend.Dockerfile      Image of the backend container (Python 3.12, FFmpeg)
 backend.entrypoint.sh   Start script: migrations, admin account, RQ worker, Gunicorn
 docker-compose.yml      Services: web (Django), db (PostgreSQL), redis
 .env.template           Template for the environment variables
 requirements.txt        Python dependencies
+.coveragerc             Settings for the test coverage report
 ```
 
 ## Credits and license
