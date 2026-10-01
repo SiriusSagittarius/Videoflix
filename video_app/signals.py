@@ -7,18 +7,12 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from video_app.models import Video
-from video_app.utils import (
-    PROCESSING_TIMEOUT,
-    delete_video_files,
-    process_video,
-)
+from video_app.utils import VIDEO_QUEUE, delete_video_files, process_video
 
 
 def enqueue_processing(video_id):
-    """Queue the processing job with enough time for long videos."""
-    django_rq.enqueue(
-        process_video, video_id, job_timeout=PROCESSING_TIMEOUT
-    )
+    """Put the processing job into the video queue with its long timeout."""
+    django_rq.get_queue(VIDEO_QUEUE).enqueue(process_video, video_id)
 
 
 @receiver(post_save, sender=Video)

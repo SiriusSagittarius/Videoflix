@@ -8,7 +8,7 @@ from video_app.tests.helpers import (
     create_hls_files,
     create_video,
 )
-from video_app.utils import PROCESSING_TIMEOUT, process_video
+from video_app.utils import process_video
 
 THUMBNAIL = "thumbnails/test.jpg"
 
@@ -21,27 +21,28 @@ def create_thumbnail_file():
     return path
 
 
-@patch("django_rq.enqueue")
+@patch("django_rq.get_queue")
 class VideoSignalTests(MediaTestCase):
     """Processing and cleanup that run when videos are saved or deleted."""
 
-    def test_new_video_is_queued_after_commit(self, enqueue):
+    def test_new_video_is_queued_after_commit(self, get_queue):
         """A new video starts the processing job once it is saved."""
         with self.captureOnCommitCallbacks(execute=True):
             video = create_video(is_converted=False)
-        enqueue.assert_called_once_with(
-            process_video, video.pk, job_timeout=PROCESSING_TIMEOUT
+        get_queue.assert_called_once_with("video")
+        get_queue.return_value.enqueue.assert_called_once_with(
+            process_video, video.pk
         )
 
-    def test_changed_video_is_not_processed_again(self, enqueue):
+    def test_changed_video_is_not_processed_again(self, get_queue):
         """Editing the title of a video does not start a new job."""
         video = create_video()
         with self.captureOnCommitCallbacks(execute=True):
             video.title = "Neuer Titel"
             video.save()
-        enqueue.assert_not_called()
+        get_queue.assert_not_called()
 
-    def test_deleting_video_removes_all_files(self, enqueue):
+    def test_deleting_video_removes_all_files(self, get_queue):
         """Original file, thumbnail and HLS folder are deleted as well."""
         thumbnail = create_thumbnail_file()
         video = create_video(thumbnail=THUMBNAIL)

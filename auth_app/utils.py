@@ -22,6 +22,7 @@ ACCOUNT_NOT_ACTIVE_MESSAGE = (
     "Please activate your account first. "
     "Check your emails for the activation link."
 )
+EMAIL_QUEUE = "emails"
 EMAIL_TEMPLATE_DIR = "auth_app/emails"
 LOGO_CID = "videoflix_logo"
 LOGO_PATH = (
@@ -154,12 +155,8 @@ def send_html_email(subject, template_name, context, recipient):
 
 
 def queue_email(send_function, user_id):
-    """Queue an email job in front of waiting video jobs.
-
-    The container runs a single RQ worker, so an email would otherwise
-    wait until all queued videos are converted.
-    """
-    django_rq.enqueue(send_function, user_id, at_front=True)
+    """Put an email job into the email queue, it runs before videos."""
+    django_rq.get_queue(EMAIL_QUEUE).enqueue(send_function, user_id)
 
 
 def send_activation_email(user_id):

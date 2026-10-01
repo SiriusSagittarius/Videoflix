@@ -125,6 +125,15 @@ RQ_QUEUES = {
     },
 }
 
+# Separate queues for emails and videos, with the connection of 'default'.
+# The worker handles them in this order, so emails come before videos.
+RQ_QUEUES['emails'] = {**RQ_QUEUES['default'], 'DEFAULT_TIMEOUT': 2 * 60}
+RQ_QUEUES['video'] = {**RQ_QUEUES['default'], 'DEFAULT_TIMEOUT': 60 * 60}
+
+RQ = {
+    'WORKER_CLASS': 'core.workers.AllQueuesWorker',
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'auth_app.api.authentication.CookieJWTAuthentication',

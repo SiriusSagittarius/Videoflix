@@ -21,22 +21,23 @@ def password_data(new_password, confirm_password=None):
     }
 
 
-@patch("django_rq.enqueue")
+@patch("django_rq.get_queue")
 class PasswordResetTests(APITestCase):
     """POST /api/password_reset/"""
 
-    def test_queues_email_for_active_user(self, enqueue):
+    def test_queues_email_for_active_user(self, get_queue):
         """An active user gets the reset email, any letter case works."""
         user = create_user()
         data = {"email": "MAX@example.com"}
         response = self.client.post(RESET_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, RESET_SENT)
-        enqueue.assert_called_once_with(
-            send_password_reset_email, user.pk, at_front=True
+        get_queue.assert_called_once_with("emails")
+        get_queue.return_value.enqueue.assert_called_once_with(
+            send_password_reset_email, user.pk
         )
 
-    def test_same_answer_for_unknown_or_inactive_users(self, enqueue):
+    def test_same_answer_for_unknown_or_inactive_users(self, get_queue):
         """Nobody can find out which emails are registered."""
         create_user("neu@example.com", is_active=False)
         for email in ("neu@example.com", "niemand@example.com"):
@@ -44,9 +45,9 @@ class PasswordResetTests(APITestCase):
                 data = {"email": email}
                 response = self.client.post(RESET_URL, data, format="json")
                 self.assertEqual(response.data, RESET_SENT)
-        enqueue.assert_not_called()
+        get_queue.assert_not_called()
 
-    def test_rejects_invalid_email(self, enqueue):
+    def test_rejects_invalid_email(self, get_queue):
         """An invalid email is a bad request."""
         data = {"email": "keine-mail"}
         response = self.client.post(RESET_URL, data, format="json")

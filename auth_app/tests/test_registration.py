@@ -22,11 +22,11 @@ def registration_data(email=EMAIL, password=PASSWORD, confirmed=None):
     }
 
 
-@patch("django_rq.enqueue")
+@patch("django_rq.get_queue")
 class RegistrationTests(APITestCase):
     """POST /api/register/"""
 
-    def test_creates_inactive_user_and_queues_email(self, enqueue):
+    def test_creates_inactive_user_and_queues_email(self, get_queue):
         """A valid sign-up creates an inactive user and queues the email."""
         response = self.client.post(URL, registration_data(), format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -34,11 +34,12 @@ class RegistrationTests(APITestCase):
         self.assertFalse(user.is_active)
         self.assertEqual(user.username, EMAIL)
         self.assertTrue(user.check_password(PASSWORD))
-        enqueue.assert_called_once_with(
-            send_activation_email, user.pk, at_front=True
+        get_queue.assert_called_once_with("emails")
+        get_queue.return_value.enqueue.assert_called_once_with(
+            send_activation_email, user.pk
         )
 
-    def test_returns_user_data_and_valid_token(self, enqueue):
+    def test_returns_user_data_and_valid_token(self, get_queue):
         """The answer contains the user and a working activation token."""
         response = self.client.post(URL, registration_data(), format="json")
         user = User.objects.get(email=EMAIL)
@@ -48,22 +49,22 @@ class RegistrationTests(APITestCase):
         token = response.data["token"]
         self.assertTrue(account_activation_token.check_token(user, token))
 
-    def test_stores_email_in_lower_case(self, enqueue):
+    def test_stores_email_in_lower_case(self, get_queue):
         """Emails are saved in lower case, so logins match later."""
         data = registration_data("Max@Example.COM")
         self.client.post(URL, data, format="json")
         self.assertTrue(User.objects.filter(username=EMAIL).exists())
 
-    def test_rejects_registered_email_with_general_message(self, enqueue):
+    def test_rejects_registered_email_with_general_message(self, get_queue):
         """A taken email gets the general message, nothing is revealed."""
         create_user()
         data = registration_data("MAX@example.com")
         response = self.client.post(URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, INVALID_INPUT)
-        enqueue.assert_not_called()
+        get_queue.assert_not_called()
 
-    def test_rejects_invalid_passwords(self, enqueue):
+    def test_rejects_invalid_passwords(self, get_queue):
         """Different, weak or email-like passwords are rejected."""
         cases = [
             registration_data(confirmed="Anderes-Passwort-9"),
@@ -76,7 +77,7 @@ class RegistrationTests(APITestCase):
                 self.assertEqual(response.data, INVALID_INPUT)
         self.assertFalse(User.objects.exists())
 
-    def test_rejects_missing_or_invalid_email(self, enqueue):
+    def test_rejects_missing_or_invalid_email(self, get_queue):
         """Without a valid email no user is created."""
         for data in ({"password": PASSWORD}, registration_data("keine-mail")):
             with self.subTest(data=data):
@@ -84,7 +85,7 @@ class RegistrationTests(APITestCase):
                 self.assertEqual(response.status_code, 400)
         self.assertFalse(User.objects.exists())
 
-    def test_ignores_broken_login_cookie(self, enqueue):
+    def test_ignores_broken_login_cookie(self, get_queue):
         """An old access cookie in the browser does not block a sign-up."""
         self.client.cookies["access_token"] = "abc.def.ghi"
         response = self.client.post(URL, registration_data(), format="json")

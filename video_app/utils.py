@@ -15,7 +15,7 @@ HLS_RESOLUTIONS = {
     "720p": {"height": 720, "max_bitrate": "2800k"},
     "1080p": {"height": 1080, "max_bitrate": "5000k"},
 }
-PROCESSING_TIMEOUT = 60 * 60
+VIDEO_QUEUE = "video"
 
 
 def build_thumbnail_command(source, target):

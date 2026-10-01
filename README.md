@@ -14,7 +14,8 @@ The frontend is provided separately and communicates with this API via REST.
 - Login with JWT tokens in HttpOnly cookies, token refresh and logout with
   a token blacklist
 - Password reset via email, the link is valid for 24 hours and works once
-- HTML emails in the Videoflix design, sent in the background
+- HTML emails in the Videoflix design, sent in the background through an
+  own email queue that comes before the video queue
 - Video upload in the Django admin with fixed categories, the RQ worker
   creates a thumbnail and converts the video with FFmpeg to HLS in 480p,
   720p and 1080p
@@ -174,11 +175,17 @@ After a change to `requirements.txt`, rebuild the image with
   endings, otherwise the container stops with
   `exec ./backend.entrypoint.sh: no such file or directory`.
   `.gitattributes` takes care of this on checkout, also on Windows.
-- **Background jobs:** emails are sent and new videos are processed by the
-  RQ worker, not by the request itself. The container runs one worker, so
-  emails are put in front of waiting video jobs. Gunicorn reloads code
-  changes automatically, the RQ worker does not. After changing code that
-  runs in a job, restart the container with `docker compose restart web`.
+- **Background jobs:** emails and videos have their own RQ queues with
+  their own timeouts: `emails` (2 minutes) and `video` (1 hour). The given
+  entrypoint starts `rqworker default` and must not be changed, so the
+  worker class `core/workers.py` (set in `RQ["WORKER_CLASS"]`) adds the
+  other queues itself. It works through them in the order of `RQ_QUEUES`,
+  so waiting emails are sent before the next video is converted. As the
+  container starts one worker process, an email still waits for a video
+  conversion that is already running.
+- **Code changes in jobs:** Gunicorn reloads code changes automatically,
+  the RQ worker does not. After changing code that runs in a job, restart
+  the container with `docker compose restart web`.
 - **Cookies:** with `DEBUG=True` the JWT cookies also work without HTTPS.
   With `DEBUG=False` they are marked `Secure` and need HTTPS.
 - **Cache:** the video list is cached in Redis for 15 minutes. Adding,
@@ -194,7 +201,7 @@ After a change to `requirements.txt`, rebuild the image with
 ## Project structure
 
 ```
-core/                   Django settings and root URLs
+core/                   Django settings, root URLs and the RQ worker class
 auth_app/               User accounts and JWT cookie authentication
   api/                  Serializers, views, URLs and the cookie authentication class
   templates/            HTML and plain text email templates
